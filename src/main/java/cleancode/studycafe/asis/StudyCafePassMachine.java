@@ -1,6 +1,6 @@
 package cleancode.studycafe.asis;
 
-import cleancode.studycafe.asis.exception.AppException;
+import cleancode.studycafe.asis.exception.GameException;
 import cleancode.studycafe.asis.io.InputHandler;
 import cleancode.studycafe.asis.io.OutputHandler;
 import cleancode.studycafe.asis.io.StudyCafeFileHandler;
@@ -71,7 +71,7 @@ public class StudyCafePassMachine {
                     outputHandler.showPassOrderSummary(selectedPass, null);
                 }
             }
-        } catch (AppException e) {
+        } catch (GameException e) {
             outputHandler.showSimpleMessage(e.getMessage());
         } catch (Exception e) {
             outputHandler.showSimpleMessage("알 수 없는 오류가 발생했습니다.");
