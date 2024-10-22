@@ -1,11 +1,10 @@
 package cleancode.minesweeper.tobe;
 
-import cleancode.minesweeper.tobe.gamelevel.Beginner;
-import cleancode.minesweeper.tobe.gamelevel.GameLevel;
-import cleancode.minesweeper.tobe.io.ConsoleInputHandler;
-import cleancode.minesweeper.tobe.io.ConsoleOutputHandler;
-import cleancode.minesweeper.tobe.io.InputHandler;
-import cleancode.minesweeper.tobe.io.OutputHandler;
+import cleancode.minesweeper.tobe.minesweeper.Minesweeper;
+import cleancode.minesweeper.tobe.minesweeper.config.GameConfig;
+import cleancode.minesweeper.tobe.minesweeper.gamelevel.Beginner;
+import cleancode.minesweeper.tobe.minesweeper.io.ConsoleInputHandler;
+import cleancode.minesweeper.tobe.minesweeper.io.ConsoleOutputHandler;
 
 // 클래스 이름을 MinesweeperGame에서 GameApplication으로 변경
 // -> 게임이 여러가지일 때, 이 메인함수에서 지뢰찾기도 실행하고, 다른 게임도 실행해볼 수 있는 관점도 생긴다.
@@ -13,11 +12,13 @@ import cleancode.minesweeper.tobe.io.OutputHandler;
 public class GameApplication {
 
     public static void main(String[] args) {
-        GameLevel gameLevel = new Beginner();
-        InputHandler inputHandler = new ConsoleInputHandler();
-        OutputHandler outputHandler = new ConsoleOutputHandler();
+        GameConfig gameConfig = new GameConfig(
+                new Beginner(),
+                new ConsoleInputHandler(),
+                new ConsoleOutputHandler()
+        );
 
-        Minesweeper minesweeper = new Minesweeper(gameLevel, inputHandler, outputHandler);
+        Minesweeper minesweeper = new Minesweeper(gameConfig);
         minesweeper.initialize();
         minesweeper.run();
     }
