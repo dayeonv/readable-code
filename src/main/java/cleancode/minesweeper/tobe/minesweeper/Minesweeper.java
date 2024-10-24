@@ -1,14 +1,14 @@
 package cleancode.minesweeper.tobe.minesweeper;
 
-import cleancode.minesweeper.tobe.minesweeper.board.GameBoard;
-import cleancode.minesweeper.tobe.minesweeper.config.GameConfig;
 import cleancode.minesweeper.tobe.game.GameInitializable;
 import cleancode.minesweeper.tobe.game.GameRunnable;
+import cleancode.minesweeper.tobe.minesweeper.board.GameBoard;
+import cleancode.minesweeper.tobe.minesweeper.board.position.CellPosition;
+import cleancode.minesweeper.tobe.minesweeper.config.GameConfig;
 import cleancode.minesweeper.tobe.minesweeper.io.InputHandler;
 import cleancode.minesweeper.tobe.minesweeper.io.OutputHandler;
-import cleancode.minesweeper.tobe.minesweeper.board.position.CellPosition;
 import cleancode.minesweeper.tobe.minesweeper.user.UserAction;
-import cleancode.studycafe.asis.exception.GameException;
+import cleancode.studycafe.asis.exception.AppException;
 
 // 점진적 리팩토링 중요! 기존꺼 복붙해서 하기
 // 메서드 바로가기 ctrl + b
@@ -46,7 +46,7 @@ public class Minesweeper implements GameInitializable, GameRunnable {
                 CellPosition cellPosition = getCellInputFromUser(); // 유저로부터 셀 입력값을 받겠다
                 UserAction userAction = getUserActionInputFromUser(); // 액션 입력값
                 actOnCell(cellPosition, userAction); // 셀의 좌표와 유저 액션을 입력 받는 메서드
-            } catch (GameException e) {
+            } catch (AppException e) {
                 outputHandler.showExceptionMessage(e);
             } catch (Exception e) {
                 outputHandler.showSimpleMessage("프로그램에 문제가 생겼습니다.");
@@ -69,7 +69,7 @@ public class Minesweeper implements GameInitializable, GameRunnable {
         outputHandler.showCommentForSelectingCell();
         CellPosition cellPosition = inputHandler.getCellPositionFromUser();
         if (gameBoard.isInvalidCellPosition(cellPosition)) { // 보드가 있는 쪽에서 자연스럽게 검증을 해보자
-            throw new GameException("잘못된 좌표를 선택하셨습니다.");
+            throw new AppException("잘못된 좌표를 선택하셨습니다.");
         }
 
         return cellPosition;
@@ -92,7 +92,7 @@ public class Minesweeper implements GameInitializable, GameRunnable {
         }
         // 이상한 것을 입력했을 때 예외 처리
         //System.out.println("잘못된 번호를 선택하셨습니다.");
-        throw new GameException("잘못된 번호를 선택하셨습니다."); // 우리가 의도한 예외사항이니까 다시 입력해주세요. 라고 사용자에게 메시지
+        throw new AppException("잘못된 번호를 선택하셨습니다."); // 우리가 의도한 예외사항이니까 다시 입력해주세요. 라고 사용자에게 메시지
     }
 
     private boolean doesUserChooseToPlantFlag(UserAction userAction) {

@@ -27,10 +27,6 @@ public class CellState {
         this.isOpened = true;
     }
 
-    public boolean isChecked() { // 사용자가 셀을 체크했냐의 조건
-        return isFlagged || isOpened; // flagged 거나 opened
-    }
-
     public boolean isOpened() {
         return isOpened;
     }

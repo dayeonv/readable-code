@@ -5,7 +5,7 @@ import cleancode.minesweeper.tobe.minesweeper.board.cell.CellSnapshot;
 import cleancode.minesweeper.tobe.minesweeper.board.position.CellPosition;
 import cleancode.minesweeper.tobe.minesweeper.io.sign.CellSignFinder;
 import cleancode.minesweeper.tobe.minesweeper.io.sign.CellSignProvider;
-import cleancode.studycafe.asis.exception.GameException;
+import cleancode.studycafe.asis.exception.AppException;
 
 import java.util.List;
 import java.util.stream.IntStream;
@@ -75,7 +75,7 @@ public class ConsoleOutputHandler implements OutputHandler {
     }
 
     @Override
-    public void showExceptionMessage(GameException e) {
+    public void showExceptionMessage(AppException e) {
         System.out.println(e.getMessage());
     }
 
