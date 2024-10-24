@@ -1,6 +1,6 @@
 package cleancode.studycafe.asis.io;
 
-import cleancode.studycafe.asis.exception.GameException;
+import cleancode.studycafe.asis.exception.AppException;
 import cleancode.studycafe.asis.model.StudyCafePass;
 import cleancode.studycafe.asis.model.StudyCafePassType;
 
@@ -23,7 +23,7 @@ public class InputHandler {
         if ("3".equals(userInput)) {
             return StudyCafePassType.FIXED;
         }
-        throw new GameException("잘못된 입력입니다.");
+        throw new AppException("잘못된 입력입니다.");
     }
 
     public StudyCafePass getSelectPass(List<StudyCafePass> passes) {

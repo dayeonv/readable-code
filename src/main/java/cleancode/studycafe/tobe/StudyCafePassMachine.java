@@ -9,49 +9,27 @@ import cleancode.studycafe.tobe.model.StudyCafePass;
 import cleancode.studycafe.tobe.model.StudyCafePassType;
 
 import java.util.List;
-import java.util.function.Predicate;
+import java.util.Optional;
 
-// *** 스터디 카페 이용권 선택 시스템 ***
 public class StudyCafePassMachine {
 
     private final InputHandler inputHandler = new InputHandler();
     private final OutputHandler outputHandler = new OutputHandler();
-
-    // 스터디 카페 이용권 목록 파일 가져오기
-    StudyCafeFileHandler studyCafeFileHandler = new StudyCafeFileHandler();
-    List<StudyCafePass> studyCafePasses = studyCafeFileHandler.readStudyCafePasses();
+    private final StudyCafeFileHandler studyCafeFileHandler = new StudyCafeFileHandler();
 
     public void run() {
         try {
-            outputHandler.showWelcomeMessage();     // 환영인사
-            outputHandler.showAnnouncement();       // 공지사항
-            outputHandler.askPassTypeSelection();   // 이용권 선택 (시간권, 주권, 고정석)
+            outputHandler.showWelcomeMessage();
+            outputHandler.showAnnouncement();
 
-            // 유저가 선택한 이용권에 대한 액션 가져오기
-            StudyCafePassType studyCafePassType = inputHandler.getPassTypeSelectingUserAction();
+            StudyCafePass selectedPass = selectPass(); // 이용권 선택하는 과정을 메서드 하나로 합침
+            Optional<StudyCafeLockerPass> optionalLockerPass = selectLockerPass(selectedPass); // 사물함 로직 메서드로 추출
 
-            // 이용권 선택하기
-            if (isHourlyPassSelected(studyCafePassType)) {          // 시간권
-                StudyCafePass selectedPass = selectPassByFilter(studyCafePasses, pass -> isHourlyPassSelected(pass.getPassType()));
-                outputHandler.showPassOrderSummary(selectedPass, null);
+            optionalLockerPass.ifPresentOrElse(
+                    lockerPass -> outputHandler.showPassOrderSummary(selectedPass, lockerPass),
+                    () -> outputHandler.showPassOrderSummary(selectedPass)
+            );
 
-            } else if (isWeeklyPassSelected(studyCafePassType)) {   // 주권
-                StudyCafePass selectedPass = selectPassByFilter(studyCafePasses, pass -> isWeeklyPassSelected(pass.getPassType()));
-                outputHandler.showPassOrderSummary(selectedPass, null);
-
-            } else if (isFixedPassSelected(studyCafePassType)) {    // 고정석
-                StudyCafePass selectedPass = selectPassByFilter(studyCafePasses, pass -> isFixedPassSelected(pass.getPassType()));
-
-                // 사물함 이용권 정보 찾기
-                StudyCafeLockerPass lockerPass = matchLockerPass(selectedPass);
-
-                // 사물함 이용권 사용 여부 확인
-                boolean lockerSelection = isLockerSelected(lockerPass);
-
-                // 사물함 이용 선택 : 삼항연산자 <lockerSelection> true -> lockerPass 전달, false -> null 전달
-                outputHandler.showPassOrderSummary(selectedPass, lockerSelection ? lockerPass : null);
-
-            }
         } catch (AppException e) {
             outputHandler.showSimpleMessage(e.getMessage());
         } catch (Exception e) {
@@ -59,62 +37,54 @@ public class StudyCafePassMachine {
         }
     }
 
+    private StudyCafePass selectPass() {
+        outputHandler.askPassTypeSelection();
+        StudyCafePassType passType = inputHandler.getPassTypeSelectingUserAction();
 
-    // 사물함 이용권 사용 여부 확인
-    private boolean isLockerSelected(StudyCafeLockerPass lockerPass) {
-        if (isLockerPassValid(lockerPass)) {
-            outputHandler.askLockerPass(lockerPass);
-            return inputHandler.getLockerSelection();
-        }
-        return false;
+        List<StudyCafePass> passCandidates = findPassCandidatesBy(passType); // 이용권 후보 고르는 메서드
+
+        outputHandler.showPassListForSelection(passCandidates);
+        return inputHandler.getSelectPass(passCandidates);
     }
 
-    // 사물함 이용권 정보 찾기
-    private StudyCafeLockerPass matchLockerPass(StudyCafePass selectedPass) {
-        List<StudyCafeLockerPass> lockerPasses = studyCafeFileHandler.readLockerPasses();
-        return lockerPasses.stream()
-                .filter(option -> option.getPassType().equals(selectedPass.getPassType())
-                        && option.getDuration() == selectedPass.getDuration())
+    private List<StudyCafePass> findPassCandidatesBy(StudyCafePassType studyCafePassType) {
+        List<StudyCafePass> allPasses = studyCafeFileHandler.readStudyCafePasses();
+
+        return allPasses.stream()
+                .filter(studyCafePass -> studyCafePass.getPassType() == studyCafePassType)
+                .toList();
+    }
+
+    private Optional<StudyCafeLockerPass> selectLockerPass(StudyCafePass selectedPass) {
+        if (selectedPass.getPassType() != StudyCafePassType.FIXED) { // 고정석이 아니면
+            return Optional.empty(); // null 사용을 자제하자. 웬만하면 optional 쓰기
+        }
+
+        StudyCafeLockerPass lockerPassCandidate = findLockerPassCandidateBy(selectedPass);
+
+        if (lockerPassCandidate != null) { // 사물함권이 있다면
+            outputHandler.askLockerPass(lockerPassCandidate); // 사용자한테 물어보고
+            boolean isLockerSelected = inputHandler.getLockerSelection();
+
+            if (isLockerSelected) { // 선택한다고 했다면
+                return Optional.of(lockerPassCandidate); // 걔를 반환함
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    private StudyCafeLockerPass findLockerPassCandidateBy(StudyCafePass pass) {
+        List<StudyCafeLockerPass> allLockerPasses = studyCafeFileHandler.readLockerPasses();
+
+        // 타입과 기간이 같은 사물함 이용권을 찾아서 반환, 없으면 null
+        return allLockerPasses.stream()
+                .filter(lockerPass ->
+                        lockerPass.getPassType() == pass.getPassType()
+                                && lockerPass.getDuration() == pass.getDuration()
+                )
                 .findFirst()
                 .orElse(null);
     }
 
-    // 시간권, 주권, 고정석 공통 메서드 추출
-    private StudyCafePass selectPassByFilter(List<StudyCafePass> passes, Predicate<StudyCafePass> filter) {
-        List<StudyCafePass> filteredPasses = passes.stream()
-                .filter(filter)
-                .toList();
-        outputHandler.showPassListForSelection(filteredPasses);
-        return inputHandler.getSelectPass(filteredPasses);
-    }
-
-    // 사물함 이용권 여부 메서드
-    private static boolean isLockerPassValid(StudyCafeLockerPass lockerPass) {
-        return lockerPass != null;
-    }
-
-    // 3. 고정석 선택 메서드 추출
-    private static boolean isFixedPassSelected(StudyCafePassType studyCafePassType) {
-        return studyCafePassType == StudyCafePassType.FIXED;
-    }
-
-    // 2. 주권 선택 메서드 추출
-    private static boolean isWeeklyPassSelected(StudyCafePassType studyCafePassType) {
-        return studyCafePassType == StudyCafePassType.WEEKLY;
-    }
-
-    // 1. 시간권 선택 메서드 추출
-    private static boolean isHourlyPassSelected(StudyCafePassType studyCafePassType) {
-        return studyCafePassType == StudyCafePassType.HOURLY;
-    }
-
 }
-
-/* ▶ 리팩토링 포인트 ◀
-    - 추상화 레벨
-    - 객체로 묶어볼만한 것은 없는지
-    - 객체지향 패러다임에 맞게 객체들이 상호 협력하고 있는지
-    - SRP : 책임에 따라 응집도 있게 객체가 잘 나뉘어져 있는지
-    - DIP : 의존관계 역전을 적용할만한 곳은 없는지
-    - 일급 컬렉션
- */
