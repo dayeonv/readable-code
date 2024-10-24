@@ -18,6 +18,15 @@ public class StudyCafePass {
         return new StudyCafePass(passType, duration, price, discountRate);
     }
 
+    public boolean isSameDurationType(StudyCafeLockerPass lockerPass) {
+        return lockerPass.isSamePassType(this.passType)
+                && lockerPass.isSameDuration(this.duration);
+    }
+
+    public boolean isSamePassType(StudyCafePassType passType) {
+        return this.passType == passType;
+    }
+
     public StudyCafePassType getPassType() {
         return passType;
     }
@@ -47,4 +56,9 @@ public class StudyCafePass {
         return "";
     }
 
+    // 지금 너의 이용권으로 사물함을 사용할 수 있어? -> 라고 높은 추상화 레벨로 질문을 함
+    public boolean cannotUseLocker() {
+        // 미래에 고정석 말고 다른 이용권이 추가될 수도 있음
+        return this.passType.isNotLockerType(); // -> 다시 객체에 질문하기(메시지 보내기)
+    }
 }

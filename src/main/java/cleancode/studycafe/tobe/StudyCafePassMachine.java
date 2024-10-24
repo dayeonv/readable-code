@@ -51,12 +51,14 @@ public class StudyCafePassMachine {
         List<StudyCafePass> allPasses = studyCafeFileHandler.readStudyCafePasses();
 
         return allPasses.stream()
-                .filter(studyCafePass -> studyCafePass.getPassType() == studyCafePassType)
+                .filter(studyCafePass -> studyCafePass.isSamePassType(studyCafePassType))
                 .toList();
     }
 
     private Optional<StudyCafeLockerPass> selectLockerPass(StudyCafePass selectedPass) {
-        if (selectedPass.getPassType() != StudyCafePassType.FIXED) { // 고정석이 아니면
+        // 고정석이 아니면 -> 낮은 추상화 레벨
+        // 사물함 옵션을 사용할 수 있는 타입이 아니면 -> 높은 추상화 레벨
+        if (selectedPass.cannotUseLocker()) { // 고정석이 아니면
             return Optional.empty(); // null 사용을 자제하자. 웬만하면 optional 쓰기
         }
 
@@ -79,10 +81,7 @@ public class StudyCafePassMachine {
 
         // 타입과 기간이 같은 사물함 이용권을 찾아서 반환, 없으면 null
         return allLockerPasses.stream()
-                .filter(lockerPass ->
-                        lockerPass.getPassType() == pass.getPassType()
-                                && lockerPass.getDuration() == pass.getDuration()
-                )
+                .filter(pass::isSameDurationType)
                 .findFirst()
                 .orElse(null);
     }
