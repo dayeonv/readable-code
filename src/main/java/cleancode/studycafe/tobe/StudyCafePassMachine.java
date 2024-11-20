@@ -1,9 +1,8 @@
 package cleancode.studycafe.tobe;
 
 import cleancode.studycafe.tobe.exception.AppException;
-import cleancode.studycafe.tobe.io.InputHandler;
-import cleancode.studycafe.tobe.io.OutputHandler;
 import cleancode.studycafe.tobe.io.StudyCafeFileHandler;
+import cleancode.studycafe.tobe.io.StudyCafeIOHandler;
 import cleancode.studycafe.tobe.model.StudyCafeLockerPass;
 import cleancode.studycafe.tobe.model.StudyCafePass;
 import cleancode.studycafe.tobe.model.StudyCafePassType;
@@ -13,38 +12,34 @@ import java.util.Optional;
 
 public class StudyCafePassMachine {
 
-    private final InputHandler inputHandler = new InputHandler();
-    private final OutputHandler outputHandler = new OutputHandler();
+    private final StudyCafeIOHandler ioHandler = new StudyCafeIOHandler();
     private final StudyCafeFileHandler studyCafeFileHandler = new StudyCafeFileHandler();
 
     public void run() {
         try {
-            outputHandler.showWelcomeMessage();
-            outputHandler.showAnnouncement();
+            ioHandler.showWelcomeMessage();
+            ioHandler.showAnnouncement();
 
             StudyCafePass selectedPass = selectPass(); // 이용권 선택하는 과정을 메서드 하나로 합침
             Optional<StudyCafeLockerPass> optionalLockerPass = selectLockerPass(selectedPass); // 사물함 로직 메서드로 추출
 
             optionalLockerPass.ifPresentOrElse(
-                    lockerPass -> outputHandler.showPassOrderSummary(selectedPass, lockerPass),
-                    () -> outputHandler.showPassOrderSummary(selectedPass)
+                    lockerPass -> ioHandler.showPassOrderSummary(selectedPass, lockerPass),
+                    () -> ioHandler.showPassOrderSummary(selectedPass)
             );
 
         } catch (AppException e) {
-            outputHandler.showSimpleMessage(e.getMessage());
+            ioHandler.showSimpleMessage(e.getMessage());
         } catch (Exception e) {
-            outputHandler.showSimpleMessage("알 수 없는 오류가 발생했습니다.");
+            ioHandler.showSimpleMessage("알 수 없는 오류가 발생했습니다.");
         }
     }
 
     private StudyCafePass selectPass() {
-        outputHandler.askPassTypeSelection();
-        StudyCafePassType passType = inputHandler.getPassTypeSelectingUserAction();
-
+        StudyCafePassType passType = ioHandler.askPassTypeSelecting();
         List<StudyCafePass> passCandidates = findPassCandidatesBy(passType); // 이용권 후보 고르는 메서드
 
-        outputHandler.showPassListForSelection(passCandidates);
-        return inputHandler.getSelectPass(passCandidates);
+        return ioHandler.askPassSelecting(passCandidates);
     }
 
     private List<StudyCafePass> findPassCandidatesBy(StudyCafePassType studyCafePassType) {
@@ -65,9 +60,7 @@ public class StudyCafePassMachine {
         StudyCafeLockerPass lockerPassCandidate = findLockerPassCandidateBy(selectedPass);
 
         if (lockerPassCandidate != null) { // 사물함권이 있다면
-            outputHandler.askLockerPass(lockerPassCandidate); // 사용자한테 물어보고
-            boolean isLockerSelected = inputHandler.getLockerSelection();
-
+            boolean isLockerSelected = ioHandler.askLockerPass(lockerPassCandidate);
             if (isLockerSelected) { // 선택한다고 했다면
                 return Optional.of(lockerPassCandidate); // 걔를 반환함
             }
