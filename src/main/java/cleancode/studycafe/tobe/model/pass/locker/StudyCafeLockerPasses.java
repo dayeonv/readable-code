@@ -1,4 +1,6 @@
-package cleancode.studycafe.tobe.model;
+package cleancode.studycafe.tobe.model.pass.locker;
+
+import cleancode.studycafe.tobe.model.pass.StudyCafeSeatPass;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,7 +19,7 @@ public class StudyCafeLockerPasses {
     }
 
 
-    public Optional<StudyCafeLockerPass> findLockerPassBy(StudyCafePass pass) {
+    public Optional<StudyCafeLockerPass> findLockerPassBy(StudyCafeSeatPass pass) {
         return lockerPasses.stream()
                 .filter(pass::isSameDurationType)
                 .findFirst();
